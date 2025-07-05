@@ -1,4 +1,3 @@
-Hak Kimly, [7/5/2025 10:41 PM]
 import db from '../models/index.js';
 
 /**
@@ -111,36 +110,33 @@ export const createTeacher = async (req, res) => {
     */
 export const getAllTeachers = async (req, res) => {
         
-        const limit = parseInt(req.query.limit) || 10;
-        const page = parseInt(req.query.page) || 1;
-        const sort = req.query.sort === 'desc' ? 'DESC' : 'ASC';
-        const populate = req.query.populate ? req.query.populate.toLowerCase() : '';
-        const total = await db.Teacher.count();
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const sort = req.query.sort === 'desc' ? 'DESC' : 'ASC';
+    const populate = req.query.populate ? req.query.populate.toLowerCase() : '';
+    const total = await db.Teacher.count();
 
-        try {
-                const teachers = await db.Teacher.findAll({
-                        limit: limit,
-                        offset: (page -1) * limit,
-                        order: [['id', sort]],
-                        include: populate ? populate.split(',').map(model => {
-                                if (model === 'course') return { model: db.Course };
-
-Hak Kimly, [7/5/2025 10:41 PM]
-return null;
-                        }).filter(Boolean) : []
-                 });
-                res.json(
-                        {
-                                meta: {
-                                        total: total,
-                                        page: page,
-                                        totalPages: Math.ceil(total / limit),
-                                }
-                                , data: teachers
-                        }
-                );
+    try {
+        const teachers = await db.Teacher.findAll({
+            limit: limit,
+            offset: (page - 1) * limit,
+            order: [['id', sort]],
+            include: populate ? populate.split(',').map(model => {
+                if (model === 'course') return { model: db.Course };
+                return null;
+        }).filter(Boolean) : []
+     });
+    res.json(
+        {
+            meta: {
+            total: total,
+            page: page,
+            totalPages: Math.ceil(total / limit),
+            },
+            data: teachers
+        });
         } catch (err) {
-                res.status(500).json({ error: err.message });
+            res.status(500).json({ error: err.message });
         }
 };
 
