@@ -114,30 +114,32 @@ export const getAllTeachers = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const sort = req.query.sort === 'desc' ? 'DESC' : 'ASC';
     const populate = req.query.populate ? req.query.populate.toLowerCase() : '';
-    const total = await db.Teacher.count();
 
     try {
+        const totalItems = await db.Teacher.count({ distinct: true, col: 'id' });
+        console.log('Total teachers:', totalItems);
         const teachers = await db.Teacher.findAll({
-            limit: limit,
-            offset: (page - 1) * limit,
-            order: [['id', sort]],
-            include: populate ? populate.split(',').map(model => {
-                if (model === 'course') return { model: db.Course };
-                return null;
-        }).filter(Boolean) : []
-     });
-    res.json(
-        {
-            meta: {
-            total: total,
-            page: page,
-            totalPages: Math.ceil(total / limit),
-            },
-            data: teachers
+        limit,
+        offset: (page - 1) * limit,
+        order: [['id', sort]],
+        include: populate ? populate.split(',').map(model => {
+            if (model === 'course') return { model: db.Course };
+            return null;
+        }).filter(Boolean) : [],
         });
-        } catch (err) {
-            res.status(500).json({ error: err.message });
-        }
+
+        res.json({
+        meta: {
+            totalItems,
+            page,
+            totalPages: Math.ceil(totalItems / limit),
+        },
+        data: teachers,
+        });
+    } catch (err) {
+        console.error('Error fetching teachers:', err);
+        res.status(500).json({ error: err.message });
+    }
 };
 
 /**

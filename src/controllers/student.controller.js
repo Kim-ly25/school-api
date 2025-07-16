@@ -50,8 +50,23 @@ export const createStudent = async (req, res) => {
  */
 export const getAllStudents = async (req, res) => {
     try {
-        const students = await db.Student.findAll({ include: db.Course });
-        res.json(students);
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+
+        const students = await db.Student.findAndCountAll({
+        limit,
+        offset: (page - 1) * limit,
+        include: [{ model: db.Course }],
+        });
+
+        res.json({
+        data: students.rows,
+        meta: {
+            totalItems: students.count,  // <-- add this
+            page,
+            totalPages: Math.ceil(students.count / limit),
+        },
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
